@@ -13,15 +13,11 @@ var durationSecond = 1000,
     durationMonth = durationDay * 30,
     durationYear = durationDay * 365;
 
-function date(t) {
-  return new Date(t);
+function date() {
+  return new Date(...arguments);
 }
 
-function number(t) {
-  return t instanceof Date ? +t : +new Date(+t);
-}
-
-export function calendar(year, month, week, day, hour, minute, second, millisecond, format) {
+export function calendar(year, month, week, day, hour, minute, second, millisecond, format, createDate = date) {
   var scale = continuous(),
       invert = scale.invert,
       domain = scale.domain;
@@ -56,6 +52,10 @@ export function calendar(year, month, week, day, hour, minute, second, milliseco
     [  year,  1,      durationYear  ]
   ];
 
+  function number(t) {
+    return t instanceof Date ? +createDate(t) : +createDate(+t);
+  }
+  
   function tickFormat(date) {
     return (second(date) < date ? formatMillisecond
         : minute(date) < date ? formatSecond
@@ -94,11 +94,11 @@ export function calendar(year, month, week, day, hour, minute, second, milliseco
   }
 
   scale.invert = function(y) {
-    return new Date(invert(y));
+    return createDate(invert(y));
   };
 
   scale.domain = function(_) {
-    return arguments.length ? domain(Array.from(_, number)) : domain().map(date);
+    return arguments.length ? domain(Array.from(_, number)) : domain().map((v) => createDate(v));
   };
 
   scale.ticks = function(interval) {
@@ -131,6 +131,6 @@ export function calendar(year, month, week, day, hour, minute, second, milliseco
   return scale;
 }
 
-export default function time() {
-  return initRange.apply(calendar(timeYear, timeMonth, timeWeek, timeDay, timeHour, timeMinute, timeSecond, timeMillisecond, timeFormat).domain([new Date(2000, 0, 1), new Date(2000, 0, 2)]), arguments);
+export default function time(createDate = date) {
+  return initRange.apply(calendar(timeYear, timeMonth, timeWeek, timeDay, timeHour, timeMinute, timeSecond, timeMillisecond, timeFormat, createDate).domain([createDate(2000, 0, 1), createDate(2000, 0, 2)]), arguments);
 }
